@@ -27,6 +27,8 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "bcrypt": "^5.1.1",
+    "class-validator": "^0.14.1",
+    "dotenv": "^16.5.0",
     "install": "^0.13.0",
     "mongoose": "^8.13.2",
     "npm": "^11.3.0",

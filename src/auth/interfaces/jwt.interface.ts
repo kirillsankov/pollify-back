@@ -4,3 +4,6 @@ export interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+export interface IToken {
+  access_token: string;
+}
