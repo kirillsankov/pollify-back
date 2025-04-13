@@ -8,7 +8,7 @@ import { PollsModule } from './polls/polls.module';
 const mogoConnection = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@pollify-mongo:27017`;
 console.log(mogoConnection);
 @Module({
-  imports: [AuthModule, MongooseModule.forRoot(mogoConnection), PollsModule],
+  imports: [AuthModule, PollsModule, MongooseModule.forRoot(mogoConnection)],
   controllers: [AppController],
   providers: [AppService],
 })

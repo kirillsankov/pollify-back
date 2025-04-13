@@ -28,6 +28,7 @@ export class PollsService {
       text: q.text,
       options: q.options,
       votes: q.options.reduce((acc, option) => ({ ...acc, [option]: 0 }), {}),
+      votedUsers: [],
     }));
 
     const newPoll = new this.pollModel({
@@ -64,12 +65,14 @@ export class PollsService {
       throw new BadRequestException('Invalid question or option');
     }
 
-    if (question.votes[`${userId}_${option}`]) {
+    if (question.votedUsers.some((id) => id === userId.toString())) {
       throw new BadRequestException('You have already voted for this option');
     }
 
     question.votes[option] += 1;
-    question.votes[`${userId}_${option}`] = 1;
+    question.votedUsers.push(userId.toString());
+
+    poll.markModified(`questions.${questionIndex}`);
 
     await poll.save();
 
@@ -84,17 +87,17 @@ export class PollsService {
     return poll;
   }
 
-  async deletePoll(pollId: string, userId: string): Promise<void> {
+  async deletePoll(pollId: string, userId: string): Promise<Poll> {
     const poll = await this.pollModel.findById(pollId);
 
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
 
-    if (poll.authorId.toString() !== userId) {
+    if (poll.authorId.toString() !== userId.toString()) {
       throw new ForbiddenException('You are not the creator of this poll');
     }
-
     await this.pollModel.findByIdAndDelete(pollId);
+    return poll;
   }
 }

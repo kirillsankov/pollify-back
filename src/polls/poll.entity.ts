@@ -15,6 +15,7 @@ export class Poll extends Document {
     text: string;
     options: string[];
     votes: { [key: string]: number };
+    votedUsers: string[];
   }[];
 
   @Prop({ required: true })
