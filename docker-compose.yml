@@ -2,7 +2,7 @@ version: '3.8'
 services:
   pollify-mongo: 
     image: mongo:latest
-    # container_name: pollify-mongo
+    container_name: pollify-mongo
     restart: always
     ports:
       - "${MONGO_PORT}:27017"
@@ -13,7 +13,9 @@ services:
       - ./mongo-data:/data/db
   pollify-api: 
     container_name: pollify-api
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - pollify-mongo
     restart: always
@@ -21,5 +23,11 @@ services:
       - "${APP_PORT}:3000"
     env_file:
       - .env
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
     volumes:
       - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./nest-cli.json:/app/nest-cli.json
