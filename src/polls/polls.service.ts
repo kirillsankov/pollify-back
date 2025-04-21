@@ -44,6 +44,14 @@ export class PollsService {
     return await this.pollModel.find().exec();
   }
 
+  async getPoll(id: string): Promise<Poll> {
+    const poll = await this.pollModel.findOne({ _id: id }).exec();
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+    return poll;
+  }
+
   async vote(pollId: string, userId: string, voteDto: VoteDto): Promise<Poll> {
     const user = await this.userModel.findById(userId);
 

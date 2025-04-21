@@ -33,6 +33,11 @@ export class PollsController {
     return await this.pollsService.getAllPolls();
   }
 
+  @Get(':id')
+  async getPoll(@Param('id') pollId: string) {
+    return await this.pollsService.getPoll(pollId);
+  }
+
   @Get(':id/results')
   async getResults(@Param('id') pollId: string) {
     return await this.pollsService.getResults(pollId);
