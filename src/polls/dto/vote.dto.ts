@@ -1,9 +1,15 @@
-import { IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
+
+// export class QuestionVoteDTO {
+//   @IsString()
+//   questionIndex: string;
+
+//   @IsString()
+//   option: string;
+// }
 
 export class VoteDto {
-  @IsString()
-  questionIndex: string;
-
-  @IsString()
-  option: string;
+  @IsArray()
+  @IsString({ each: true })
+  questions: string[];
 }

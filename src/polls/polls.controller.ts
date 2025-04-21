@@ -25,7 +25,7 @@ export class PollsController {
     @GetUser() user: User,
     @Body() createPollDto: CreatePollDto,
   ) {
-    return this.pollsService.createPoll(user._id as string, createPollDto);
+    return this.pollsService.createPoll(user, createPollDto);
   }
 
   @Get()

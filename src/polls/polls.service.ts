@@ -18,11 +18,8 @@ export class PollsService {
     @InjectModel('User') private userModel: Model<User>,
   ) {}
 
-  async createPoll(
-    authorId: string,
-    createPollDto: CreatePollDto,
-  ): Promise<Poll> {
-    const { title, questions, expiresAt } = createPollDto;
+  async createPoll(user: User, createPollDto: CreatePollDto): Promise<Poll> {
+    const { title, questions } = createPollDto;
 
     const formattedQuestions = questions.map((q) => ({
       text: q.text,
@@ -33,9 +30,11 @@ export class PollsService {
 
     const newPoll = new this.pollModel({
       title,
-      authorId,
+      authorId: user._id,
+      authorName: user.username,
       questions: formattedQuestions,
-      expiresAt: new Date(expiresAt),
+      createAt: new Date(),
+      votedUsers: [],
     });
 
     return await newPoll.save();
@@ -46,9 +45,8 @@ export class PollsService {
   }
 
   async vote(pollId: string, userId: string, voteDto: VoteDto): Promise<Poll> {
-    const { questionIndex, option } = voteDto;
-
     const user = await this.userModel.findById(userId);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -58,21 +56,33 @@ export class PollsService {
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
-
-    const question = poll.questions[+questionIndex];
-
-    if (!question || !question.options.includes(option)) {
-      throw new BadRequestException('Invalid question or option');
+    if (poll.questions.length !== voteDto.questions.length) {
+      throw new BadRequestException('Invalid questions');
     }
 
-    if (question.votedUsers.some((id) => id === userId.toString())) {
-      throw new BadRequestException('You have already voted for this option');
+    if (poll.votedUsers.includes(userId)) {
+      throw new BadRequestException('You have already voted');
     }
 
-    question.votes[option] += 1;
-    question.votedUsers.push(userId.toString());
+    for (let i = 0; i < voteDto.questions.length; i++) {
+      const option = voteDto.questions[i];
+      const question = poll.questions[+i];
 
-    poll.markModified(`questions.${questionIndex}`);
+      if (!question || !question.options.includes(option)) {
+        throw new BadRequestException('Invalid question or option');
+      }
+
+      // if (question.votedUsers.some((id) => id === userId.toString())) {
+      //   throw new BadRequestException('You have already voted for this option');
+      // }
+
+      question.votes[option] += 1;
+      question.votedUsers.push(`${userId.toString()}-${option}`);
+
+      poll.markModified(`questions.${i}`);
+    }
+
+    poll.votedUsers.push(userId.toString());
 
     await poll.save();
 

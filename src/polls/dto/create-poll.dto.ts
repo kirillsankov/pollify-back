@@ -19,6 +19,6 @@ export class CreatePollDto {
   @Type(() => QuestionDto)
   questions: QuestionDto[];
 
-  @IsString()
-  expiresAt: string;
+  // @IsString()
+  // expiresAt: string;
 }

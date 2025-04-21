@@ -11,6 +11,9 @@ export class Poll extends Document {
   authorId: string;
 
   @Prop({ required: true })
+  authorName: string;
+
+  @Prop({ required: true })
   questions: {
     text: string;
     options: string[];
@@ -19,7 +22,10 @@ export class Poll extends Document {
   }[];
 
   @Prop({ required: true })
-  expiresAt: Date;
+  votedUsers: string[];
+
+  @Prop({ required: true })
+  createAt: Date;
 }
 
 export const PollSchema = SchemaFactory.createForClass(Poll);
