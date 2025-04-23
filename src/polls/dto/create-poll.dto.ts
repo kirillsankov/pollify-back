@@ -10,7 +10,7 @@ export class QuestionDto {
   options: string[];
 }
 
-export class CreatePollDto {
+export class CreateOrUpdatePollDto {
   @IsString()
   title: string;
 

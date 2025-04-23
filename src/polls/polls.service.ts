@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { Poll } from './poll.entity';
-import { CreatePollDto } from './dto/create-poll.dto';
+import { CreateOrUpdatePollDto } from './dto/create-poll.dto';
 import { VoteDto } from './dto/vote.dto';
 import { User } from 'src/auth/user.entity';
 
@@ -18,7 +18,10 @@ export class PollsService {
     @InjectModel('User') private userModel: Model<User>,
   ) {}
 
-  async createPoll(user: User, createPollDto: CreatePollDto): Promise<Poll> {
+  async createPoll(
+    user: User,
+    createPollDto: CreateOrUpdatePollDto,
+  ): Promise<Poll> {
     const { title, questions } = createPollDto;
 
     const formattedQuestions = questions.map((q) => ({
@@ -40,14 +43,88 @@ export class PollsService {
     return await newPoll.save();
   }
 
-  async getAllPolls(): Promise<Poll[]> {
-    return await this.pollModel.find().exec();
+  async updatePoll(
+    id: string,
+    updatePollDto: CreateOrUpdatePollDto,
+    user: User,
+  ): Promise<Poll> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
+    const poll = await this.pollModel.findById(id);
+
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+    if (poll.authorId !== (user._id as string).toString()) {
+      throw new ForbiddenException('You are not the admin of this poll');
+    }
+
+    poll.title = updatePollDto.title;
+
+    const existingQuestionsMap = new Map(
+      poll.questions.map((q) => [q.text, q]),
+    );
+
+    const orderedQuestions = updatePollDto.questions.map((newQ) => {
+      const existingQ = existingQuestionsMap.get(newQ.text);
+
+      if (existingQ) {
+        const updatedVotes: Record<string, number> = {};
+
+        newQ.options.forEach((option) => {
+          if (existingQ.options.includes(option)) {
+            updatedVotes[option] = existingQ.votes[option];
+          } else {
+            updatedVotes[option] = 0;
+          }
+        });
+
+        existingQ.options = [...newQ.options];
+        existingQ.votes = updatedVotes;
+        existingQ.votedUsers = existingQ.votedUsers.filter((voteId) => {
+          const [, votedOption] = voteId.split('-');
+          return existingQ.options.includes(votedOption);
+        });
+
+        return existingQ;
+      } else {
+        return {
+          text: newQ.text,
+          options: newQ.options,
+          votes: newQ.options.reduce<Record<string, number>>((acc, option) => {
+            acc[option] = 0;
+            return acc;
+          }, {}),
+          votedUsers: [],
+        };
+      }
+    });
+
+    poll.questions = orderedQuestions;
+    poll.markModified('questions');
+
+    return await poll.save();
   }
 
-  async getPoll(id: string): Promise<Poll> {
+  async getAllPolls(user: User): Promise<Poll[]> {
+    return await this.pollModel
+      .find({
+        authorId: user._id,
+      })
+      .exec();
+  }
+
+  async getPoll(id: string, user: User): Promise<Poll> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
     const poll = await this.pollModel.findOne({ _id: id }).exec();
     if (!poll) {
       throw new NotFoundException('Poll not found');
+    }
+    if (poll.authorId !== (user._id as string).toString()) {
+      throw new ForbiddenException('You are not the admin of this poll');
     }
     return poll;
   }
@@ -58,7 +135,9 @@ export class PollsService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
+    if (!isValidObjectId(pollId)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
     const poll = await this.pollModel.findById(pollId);
 
     if (!poll) {
@@ -97,23 +176,18 @@ export class PollsService {
     return poll;
   }
 
-  async getResults(pollId: string): Promise<Poll> {
-    const poll = await this.pollModel.findById(pollId);
-    if (!poll) {
-      throw new NotFoundException('Poll not found');
-    }
-    return poll;
-  }
-
   async deletePoll(pollId: string, userId: string): Promise<Poll> {
+    if (!isValidObjectId(pollId)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
     const poll = await this.pollModel.findById(pollId);
 
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
 
-    if (poll.authorId.toString() !== userId.toString()) {
-      throw new ForbiddenException('You are not the creator of this poll');
+    if (poll.authorId !== userId) {
+      throw new ForbiddenException('You are not the admin of this poll');
     }
     await this.pollModel.findByIdAndDelete(pollId);
     return poll;
