@@ -186,7 +186,7 @@ export class PollsService {
       throw new NotFoundException('Poll not found');
     }
 
-    if (poll.authorId !== userId) {
+    if (poll.authorId !== userId.toString()) {
       throw new ForbiddenException('You are not the admin of this poll');
     }
     await this.pollModel.findByIdAndDelete(pollId);
