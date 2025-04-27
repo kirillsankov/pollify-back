@@ -7,21 +7,22 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { Poll } from './poll.entity';
-import { CreateOrUpdatePollDto } from './dto/create-poll.dto';
+import { RequestPollDto, GeneratePollDto } from './dto/create-poll.dto';
 import { VoteDto } from './dto/vote.dto';
 import { User } from 'src/auth/user.entity';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue, QueueEvents } from 'bullmq';
+import { connectionRedis, QueueName } from 'src/configs/redis.config';
 
 @Injectable()
 export class PollsService {
   constructor(
     @InjectModel('Poll') private pollModel: Model<Poll>,
     @InjectModel('User') private userModel: Model<User>,
+    @InjectQueue(QueueName.POLL_AI) private pollAiQueue: Queue,
   ) {}
 
-  async createPoll(
-    user: User,
-    createPollDto: CreateOrUpdatePollDto,
-  ): Promise<Poll> {
+  async createPoll(user: User, createPollDto: RequestPollDto): Promise<Poll> {
     const { title, questions } = createPollDto;
 
     const formattedQuestions = questions.map((q) => ({
@@ -45,7 +46,7 @@ export class PollsService {
 
   async updatePoll(
     id: string,
-    updatePollDto: CreateOrUpdatePollDto,
+    updatePollDto: RequestPollDto,
     user: User,
   ): Promise<Poll> {
     if (!isValidObjectId(id)) {
@@ -191,5 +192,18 @@ export class PollsService {
     }
     await this.pollModel.findByIdAndDelete(pollId);
     return poll;
+  }
+
+  async generatePool(
+    generatePollDto: GeneratePollDto,
+  ): Promise<RequestPollDto> {
+    const queueEvents = new QueueEvents(QueueName.POLL_AI, {
+      connection: connectionRedis,
+    });
+    const job = await this.pollAiQueue.add(
+      `${QueueName.POLL_AI}Job`,
+      generatePollDto,
+    );
+    return (await job.waitUntilFinished(queueEvents)) as RequestPollDto;
   }
 }

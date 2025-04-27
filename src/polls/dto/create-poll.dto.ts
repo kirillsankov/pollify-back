@@ -1,4 +1,12 @@
-import { IsString, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  Length,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QuestionDto {
@@ -10,7 +18,7 @@ export class QuestionDto {
   options: string[];
 }
 
-export class CreateOrUpdatePollDto {
+export class RequestPollDto {
   @IsString()
   title: string;
 
@@ -21,4 +29,17 @@ export class CreateOrUpdatePollDto {
 
   // @IsString()
   // expiresAt: string;
+}
+
+export class GeneratePollDto {
+  @IsString()
+  @Length(3, 1000, {
+    message: 'Message prompt must be between 3 and 1000 characters',
+  })
+  messagePrompt: string;
+
+  @IsNumber()
+  @Max(20, { message: 'Number of questions cannot exceed 20' })
+  @Min(1, { message: 'Number of questions must be at least 1' })
+  numberQuestion: number;
 }

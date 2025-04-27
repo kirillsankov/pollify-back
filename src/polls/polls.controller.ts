@@ -10,7 +10,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { PollsService } from './polls.service';
-import { CreateOrUpdatePollDto } from './dto/create-poll.dto';
+import { RequestPollDto, GeneratePollDto } from './dto/create-poll.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guards';
 import { GetUser } from '../decorators/user.decorator';
 import { User } from 'src/auth/user.entity';
@@ -24,16 +24,22 @@ export class PollsController {
   @Post()
   async createPoll(
     @GetUser() user: User,
-    @Body() createPollDto: CreateOrUpdatePollDto,
+    @Body() createPollDto: RequestPollDto,
   ) {
     return this.pollsService.createPoll(user, createPollDto);
+  }
+
+  @Post('/generate')
+  @UseGuards(JwtAuthGuard)
+  async generatePoolAi(@Body() generatePollDto: GeneratePollDto) {
+    return await this.pollsService.generatePool(generatePollDto);
   }
 
   @Put(':id/update')
   async updatePoll(
     @GetUser() user: User,
     @Param('id') pollId: string,
-    @Body() updatePollDto: CreateOrUpdatePollDto,
+    @Body() updatePollDto: RequestPollDto,
   ) {
     return await this.pollsService.updatePoll(pollId, updatePollDto, user);
   }
