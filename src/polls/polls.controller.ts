@@ -63,6 +63,11 @@ export class PollsController {
     return this.pollsService.vote(pollId, user._id as string, voteDto);
   }
 
+  @Get(':id/check-vote')
+  async checkVote(@Param('id') pollId: string, @GetUser() user: User) {
+    return this.pollsService.checkVote(pollId, user._id as string);
+  }
+
   @Delete(':id')
   async deletePoll(@Param('id') pollId: string, @GetUser() user: User) {
     return await this.pollsService.deletePoll(pollId, user._id as string);

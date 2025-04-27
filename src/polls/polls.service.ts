@@ -130,6 +130,30 @@ export class PollsService {
     return poll;
   }
 
+  async checkVote(
+    pollId: string,
+    userId: string,
+  ): Promise<{ isVoted: boolean; userId: string }> {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!isValidObjectId(pollId)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
+    const poll = await this.pollModel.findById(pollId);
+
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    return {
+      isVoted: poll.votedUsers.includes(userId),
+      userId: (user._id as string).toString(),
+    };
+  }
+
   async vote(pollId: string, userId: string, voteDto: VoteDto): Promise<Poll> {
     const user = await this.userModel.findById(userId);
 
