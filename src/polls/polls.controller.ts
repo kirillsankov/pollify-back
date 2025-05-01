@@ -54,6 +54,11 @@ export class PollsController {
     return await this.pollsService.getPoll(pollId, user);
   }
 
+  @Get('short/:id')
+  async getShortPoll(@Param('id') pollId: string, @GetUser() user: User) {
+    return await this.pollsService.getShortPoll(pollId, user.id);
+  }
+
   @Post(':id/vote')
   async vote(
     @Param('id') pollId: string,

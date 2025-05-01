@@ -130,6 +130,38 @@ export class PollsService {
     return poll;
   }
 
+  async getShortPoll(id: string, userId: string): Promise<Partial<Poll>> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid poll ID format');
+    }
+
+    const poll = await this.pollModel
+      .findOne({ _id: id }, { title: 1, questions: 1, votedUsers: 1, _id: 1 })
+      .exec();
+
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    if (userId) {
+      const isUserVoted = poll.votedUsers.includes(userId);
+      poll.votedUsers = isUserVoted ? [userId] : [];
+
+      poll.questions = poll.questions.map((question) => {
+        const userVotes = question.votedUsers.filter((voteId) =>
+          voteId.startsWith(`${userId}-`),
+        );
+
+        return {
+          ...question,
+          votedUsers: userVotes,
+        };
+      });
+    }
+
+    return poll;
+  }
+
   async checkVote(
     pollId: string,
     userId: string,
