@@ -9,7 +9,7 @@ import { isValidObjectId, Model } from 'mongoose';
 import { Poll } from './poll.entity';
 import { RequestPollDto, GeneratePollDto } from './dto/create-poll.dto';
 import { VoteDto } from './dto/vote.dto';
-import { User } from 'src/auth/user.entity';
+import { User } from 'src/auth/enities/user.entity';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import { connectionRedis, QueueName } from 'src/configs/redis.config';

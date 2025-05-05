@@ -5,13 +5,17 @@ import * as bcrypt from 'bcrypt';
 export interface UserDocument extends Document {
   username: string;
   password: string;
+  refreshToken: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 @Schema()
 export class User extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   username: string;
+
+  @Prop({ required: true, unique: true })
+  email: string;
 
   @Prop({ required: true })
   password: string;

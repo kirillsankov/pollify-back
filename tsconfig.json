@@ -16,6 +16,11 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "exclude": [
+      "node_modules",
+      "dist",
+      "init-scripts"
+    ],
   }
 }

@@ -6,4 +6,5 @@ export interface JwtPayload {
 }
 export interface IToken {
   access_token: string;
+  refreshToken: string;
 }

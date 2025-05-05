@@ -13,7 +13,7 @@ import { PollsService } from './polls.service';
 import { RequestPollDto, GeneratePollDto } from './dto/create-poll.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guards';
 import { GetUser } from '../decorators/user.decorator';
-import { User } from 'src/auth/user.entity';
+import { User } from 'src/auth/enities/user.entity';
 import { VoteDto } from './dto/vote.dto';
 
 @Controller('polls')
