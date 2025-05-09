@@ -35,7 +35,7 @@ export class PollsService {
     const newPoll = new this.pollModel({
       title,
       authorId: user._id,
-      authorName: user.username,
+      authorEmail: user.email,
       questions: formattedQuestions,
       createAt: new Date(),
       votedUsers: [],

@@ -3,22 +3,22 @@ import { Document } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 export interface UserDocument extends Document {
-  username: string;
+  email: string;
   password: string;
-  refreshToken: string;
+  isEmailVerified: boolean;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 @Schema()
 export class User extends Document {
-  @Prop({ required: true })
-  username: string;
-
   @Prop({ required: true, unique: true })
   email: string;
 
   @Prop({ required: true })
   password: string;
+
+  @Prop({ default: false })
+  isEmailVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

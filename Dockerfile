@@ -6,6 +6,6 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY --chown=node:node . .
 
 CMD ["npm", "run", "start:dev"]

@@ -1,4 +1,3 @@
-// src/polls/poll.entity.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -11,7 +10,7 @@ export class Poll extends Document {
   authorId: string;
 
   @Prop({ required: true })
-  authorName: string;
+  authorEmail: string;
 
   @Prop({ required: true })
   questions: {
