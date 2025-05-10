@@ -126,7 +126,9 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
-  async resendVerificationCode(email: string): Promise<{ message: string }> {
+  async resendVerificationCodeEmail(
+    email: string,
+  ): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
       throw new NotFoundException('User with this email does not exist');
@@ -237,6 +239,12 @@ export class AuthService {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
       throw new NotFoundException('User with this email does not exist');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new BadRequestException(
+        'Email not verified. Please verify your email first.',
+      );
     }
 
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();

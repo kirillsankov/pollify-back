@@ -25,9 +25,11 @@ export class AuthController {
     );
   }
 
-  @Post('resend-verification')
-  async resendVerification(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return this.authService.resendVerificationCode(forgotPasswordDto.email);
+  @Post('resend-verification-email')
+  async resendVerificationEmail(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.resendVerificationCodeEmail(
+      forgotPasswordDto.email,
+    );
   }
 
   @Post('refresh')
