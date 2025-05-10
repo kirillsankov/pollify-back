@@ -105,7 +105,7 @@ export class AuthService {
     }
 
     if (user.isEmailVerified) {
-      return { message: 'Email already verified' };
+      throw new BadRequestException('Email already verified');
     }
 
     const verificationRecord = await this.emailVerificationModel
@@ -133,7 +133,7 @@ export class AuthService {
     }
 
     if (user.isEmailVerified) {
-      return { message: 'Email already verified' };
+      throw new BadRequestException('Email already verified');
     }
 
     await this.sendVerificationCode(user);
@@ -144,6 +144,25 @@ export class AuthService {
   @Cron('0 */15 * * * *')
   async cleanupExpiredVerificationCodes() {
     const now = new Date();
+
+    const expiredVerifications = await this.emailVerificationModel
+      .find({
+        exp: { $lt: now },
+      })
+      .exec();
+
+    for (const verification of expiredVerifications) {
+      const user = await this.userModel.findById(verification.userId).exec();
+
+      if (user && !user.isEmailVerified) {
+        await this.refreshModel.deleteMany({ userId: user._id }).exec();
+        await this.resetPasswordModel.deleteMany({ userId: user._id }).exec();
+
+        await user.deleteOne();
+        console.log(`Deleted unverified user: ${user.email}`);
+      }
+    }
+
     await this.emailVerificationModel
       .deleteMany({
         exp: { $lt: now },
