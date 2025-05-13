@@ -17,7 +17,20 @@ import { Cron } from '@nestjs/schedule';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ResetPasswordDocument } from './enities/reset-password.entity';
 import { EmailVerificationDocument } from './enities/email-verification.entity';
-
+// Добавим новый интерфейс для ответа с информацией о куках
+export interface TokenWithCookieOptions extends IToken {
+  cookieOptions: {
+    name: string;
+    value: string;
+    options: {
+      httpOnly: boolean;
+      secure: boolean;
+      expires: Date;
+      sameSite: 'strict' | 'lax' | 'none';
+      path: string;
+    };
+  };
+}
 @Injectable()
 export class AuthService {
   constructor(
@@ -55,7 +68,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto): Promise<IToken> {
+  async login(loginDto: LoginDto): Promise<TokenWithCookieOptions> {
     const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
@@ -68,9 +81,46 @@ export class AuthService {
       );
     }
 
-    return this.generateToken(user);
+    return this.generateTokenWithCookieOptions(user);
   }
 
+  async refreshToken(token: string): Promise<TokenWithCookieOptions> {
+    const refresh = await this.refreshModel.findOneAndDelete({
+      token: token.toString(),
+      exp: { $gte: new Date() },
+    });
+    if (!refresh) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const user = await this.userModel.findById(refresh.userId).exec();
+
+    return this.generateTokenWithCookieOptions(user as UserDocument);
+  }
+
+  private async generateTokenWithCookieOptions(
+    user: UserDocument,
+  ): Promise<TokenWithCookieOptions> {
+    const { token, refreshToken } = await this.generateToken(user);
+
+    const expires = new Date();
+    expires.setDate(expires.getDate() + 3);
+
+    return {
+      token,
+      refreshToken,
+      cookieOptions: {
+        name: 'refresh_token',
+        value: refreshToken,
+        options: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          expires,
+          sameSite: 'strict',
+          path: '/',
+        },
+      },
+    };
+  }
   private async sendVerificationCode(user: UserDocument): Promise<void> {
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
@@ -172,19 +222,6 @@ export class AuthService {
       .exec();
   }
 
-  async refreshToken(token: string): Promise<IToken> {
-    const refresh = await this.refreshModel.findOneAndDelete({
-      token: token.toString(),
-      exp: { $gte: new Date() },
-    });
-    if (!refresh) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-    const user = await this.userModel.findById(refresh.userId).exec();
-
-    return this.generateToken(user as UserDocument);
-  }
-
   private async generateToken(user: UserDocument): Promise<IToken> {
     const payload = { email: user.email, sub: user._id };
     const tokenRefresh = uuidv4();
@@ -194,7 +231,7 @@ export class AuthService {
         exp: { $gte: new Date() },
       })
       .exec();
-    console.log(refreshTokenDB);
+
     if (!refreshTokenDB) {
       await this.cleanupExpiredTokens((user._id as string).toString());
       await this.storeRefreshToken(
@@ -202,8 +239,9 @@ export class AuthService {
         (user._id as string).toString(),
       );
     }
+
     return {
-      access_token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
       refreshToken: refreshTokenDB?.token || tokenRefresh,
     };
   }

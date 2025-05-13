@@ -5,6 +5,6 @@ export interface JwtPayload {
   exp?: number;
 }
 export interface IToken {
-  access_token: string;
+  token: string;
   refreshToken: string;
 }

@@ -1,9 +1,18 @@
-import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Res,
+  UnauthorizedException,
+  Req,
+} from '@nestjs/common';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt.guards';
-import { RefreshDto } from './dto/refresh.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
@@ -32,14 +41,36 @@ export class AuthController {
     );
   }
 
-  @Post('refresh')
-  async refresh(@Body() refreshDto: RefreshDto) {
-    return this.authService.refreshToken(refreshDto.token);
+  @Post('login')
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.login(loginDto);
+
+    const { name, value, options } = result.cookieOptions;
+    response.cookie(name, value, options);
+
+    return { token: result.token };
   }
 
-  @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @Post('refresh')
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    console.log(request.cookies);
+    const refreshToken = request.cookies?.['refresh_token'];
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    const result = await this.authService.refreshToken(refreshToken);
+    const { name, value, options } = result.cookieOptions;
+    response.cookie(name, value, options);
+
+    return { token: result.token };
   }
 
   @Post('forgot-password')
