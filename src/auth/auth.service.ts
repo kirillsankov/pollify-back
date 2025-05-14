@@ -17,7 +17,6 @@ import { Cron } from '@nestjs/schedule';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ResetPasswordDocument } from './enities/reset-password.entity';
 import { EmailVerificationDocument } from './enities/email-verification.entity';
-// Добавим новый интерфейс для ответа с информацией о куках
 export interface TokenWithCookieOptions extends IToken {
   cookieOptions: {
     name: string;
@@ -68,7 +67,10 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto): Promise<TokenWithCookieOptions> {
+  async login(
+    loginDto: LoginDto,
+    existingRefreshToken?: string,
+  ): Promise<TokenWithCookieOptions> {
     const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
@@ -81,26 +83,42 @@ export class AuthService {
       );
     }
 
-    return this.generateTokenWithCookieOptions(user);
+    return this.generateTokenWithCookieOptions(user, existingRefreshToken);
   }
 
   async refreshToken(token: string): Promise<TokenWithCookieOptions> {
-    const refresh = await this.refreshModel.findOneAndDelete({
+    const refresh = await this.refreshModel.findOne({
       token: token.toString(),
       exp: { $gte: new Date() },
     });
+
     if (!refresh) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const user = await this.userModel.findById(refresh.userId).exec();
 
-    return this.generateTokenWithCookieOptions(user as UserDocument);
+    const user = await this.userModel.findById(refresh.userId).exec();
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    refresh.exp = new Date();
+    refresh.exp.setDate(refresh.exp.getDate() + 3);
+    await refresh.save();
+
+    return this.generateTokenWithCookieOptions(
+      user as UserDocument,
+      refresh.token,
+    );
   }
 
   private async generateTokenWithCookieOptions(
     user: UserDocument,
+    existingRefreshToken: string = '',
   ): Promise<TokenWithCookieOptions> {
-    const { token, refreshToken } = await this.generateToken(user);
+    const { token, refreshToken } = await this.generateToken(
+      user,
+      existingRefreshToken,
+    );
 
     const expires = new Date();
     expires.setDate(expires.getDate() + 3);
@@ -222,27 +240,40 @@ export class AuthService {
       .exec();
   }
 
-  private async generateToken(user: UserDocument): Promise<IToken> {
+  private async generateToken(
+    user: UserDocument,
+    existingRefreshToken?: string,
+  ): Promise<IToken> {
     const payload = { email: user.email, sub: user._id };
-    const tokenRefresh = uuidv4();
-    const refreshTokenDB = await this.refreshModel
-      .findOne({
-        userId: (user._id as string).toString(),
-        exp: { $gte: new Date() },
-      })
-      .exec();
 
-    if (!refreshTokenDB) {
-      await this.cleanupExpiredTokens((user._id as string).toString());
-      await this.storeRefreshToken(
-        tokenRefresh,
-        (user._id as string).toString(),
-      );
+    if (existingRefreshToken) {
+      const existingToken = await this.refreshModel
+        .findOne({
+          token: existingRefreshToken,
+          userId: (user._id as string).toString(),
+          exp: { $gte: new Date() },
+        })
+        .exec();
+
+      if (existingToken) {
+        existingToken.exp = new Date();
+        existingToken.exp.setDate(existingToken.exp.getDate() + 3);
+        await existingToken.save();
+        return {
+          token: this.jwtService.sign(payload),
+          refreshToken: existingToken.token,
+        };
+      }
     }
+
+    await this.cleanupExpiredTokens((user._id as string).toString());
+
+    const tokenRefresh = uuidv4();
+    await this.storeRefreshToken(tokenRefresh, (user._id as string).toString());
 
     return {
       token: this.jwtService.sign(payload),
-      refreshToken: refreshTokenDB?.token || tokenRefresh,
+      refreshToken: tokenRefresh,
     };
   }
 
