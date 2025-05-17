@@ -229,7 +229,6 @@ export class AuthService {
         await this.resetPasswordModel.deleteMany({ userId: user._id }).exec();
 
         await user.deleteOne();
-        console.log(`Deleted unverified user: ${user.email}`);
       }
     }
 
