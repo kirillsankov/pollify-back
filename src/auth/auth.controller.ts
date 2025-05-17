@@ -62,7 +62,6 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    console.log(request.cookies);
     const refreshToken = request.cookies?.['refresh_token'];
 
     if (!refreshToken) {
