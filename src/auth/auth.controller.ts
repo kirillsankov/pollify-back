@@ -89,6 +89,27 @@ export class AuthController {
     );
   }
 
+  @Post('logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const refreshToken = request.cookies?.['refresh_token'];
+
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
+
+    response.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      sameSite: 'strict',
+    });
+
+    return { message: 'Logged out successfully' };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('validate')
   validate() {

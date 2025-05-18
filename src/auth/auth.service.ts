@@ -380,4 +380,14 @@ export class AuthService {
       })
       .exec();
   }
+
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    await this.refreshModel
+      .deleteOne({
+        token: refreshToken,
+      })
+      .exec();
+
+    return { message: 'Logged out successfully' };
+  }
 }
