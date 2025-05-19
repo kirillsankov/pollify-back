@@ -1,98 +1,163 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <h1 align="center">Pollify</h1>
+  <p align="center">Educational project for creating and managing polls</p>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Project Description
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Pollify is an educational web application for creating and conducting polls. The project is developed using a modern technology stack and follows best development practices. Users can register, create polls, vote, and view results.
 
-## Description
+## Technology Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Core Technologies
 
-## Project setup
+- **NestJS** - a progressive Node.js framework for building efficient and scalable server-side applications. Used as the foundation for the entire backend, providing a modular architecture and adherence to SOLID principles.
+
+- **TypeScript** - a typed programming language that compiles to JavaScript. Provides static typing, which helps avoid errors during development.
+
+- **MongoDB** - a NoSQL database used to store data about users, polls, and votes. Chosen for its schema flexibility and good scalability.
+
+- **Mongoose** - an ODM (Object Data Modeling) library for MongoDB and Node.js. Provides a convenient way to model data and interact with the database.
+
+### Authentication and Authorization
+
+- **JWT (JSON Web Tokens)** - used for secure user authentication and protection of API endpoints.
+
+- **Passport** - middleware for authentication in Node.js. Integrated with NestJS to provide various authentication strategies.
+
+- **bcrypt** - a library for password hashing, ensuring secure storage of user credentials.
+
+### Queues and Background Tasks
+
+- **BullMQ** - a library for managing task queues in Node.js. Used for processing asynchronous operations such as sending emails and processing poll results.
+
+- **Redis** - an in-memory data store used by BullMQ for managing task queues.
+
+- **@nestjs/schedule** - a module for scheduling tasks in NestJS, used for periodic operations such as cleaning up outdated data.
+
+### Email Sending
+
+- **Nodemailer** - a module for sending emails from Node.js applications. Used to send registration confirmation and password reset emails.
+
+- **Handlebars** - a templating engine for creating HTML email templates.
+
+### Artificial Intelligence
+
+- **Google Gemini AI** - Google's artificial intelligence API used for analyzing poll results and generating insights.
+
+### Data Validation and Transformation
+
+- **class-validator** - a library for validating incoming data based on decorators.
+
+- **class-transformer** - a library for transforming plain objects into class instances and vice versa.
+
+## Project Structure
+
+```
+src/
+├── auth/                  # Authentication and authorization module
+│   ├── dto/               # Data Transfer Objects for authentication
+│   ├── entities/          # User and token entities
+│   ├── guards/            # Guards for route protection
+│   └── interfaces/        # Interfaces for typing
+├── polls/                 # Polls module
+│   ├── dto/               # DTOs for creating polls and voting
+│   └── entities/          # Poll entities
+├── templates/             # HTML templates for emails
+├── config/                # Configuration files
+└── main.ts               # Application entry point
+```
+
+## Functionality
+
+- **User Authentication**: registration, login, email confirmation, password recovery
+- **Poll Management**: creating, editing, deleting polls
+- **Voting**: ability to vote in polls
+- **Analytics**: viewing poll results with analytical data
+- **Notifications**: sending email notifications about important events
+
+## Installation and Running
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB
+- Redis
+
+### Installing Dependencies
 
 ```bash
 $ npm install
 ```
 
-## Compile and run the project
+### Environment Setup
+
+Create a `.env` file in the project root with the following variables:
+
+```
+APP_PORT=
+MONGO_PORT=
+MONGO_INITDB_ROOT_USERNAME=
+MONGO_INITDB_ROOT_PASSWORD=
+MONGO_USER=
+MONGO_PASSWORD=
+MONGO_DB=
+USER_NAME=
+USER_PASSWORD=
+FRONTEND_URL=
+GEMINI_API_KEY=
+JWT_SECRET=
+CLIENT_ID=
+CLIENT_SECRET=
+REFRESH_TOKEN=
+ACCESS_TOKEN=
+```
+
+### Running the Application
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
+# Development mode
 $ npm run start:dev
 
-# production mode
+# Debug mode
+$ npm run start:debug
+
+# Production mode
+$ npm run build
 $ npm run start:prod
 ```
 
-## Run tests
+### Running with Docker
+
+The project includes Docker configuration for quick deployment:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+$ docker-compose up -d
 ```
 
-## Deployment
+This will start MongoDB, Redis, and the application itself in Docker containers.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## API Endpoints
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Authentication
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+- `POST /auth/register` - Register a new user
+- `POST /auth/login` - Log in to the system
+- `POST /auth/refresh` - Refresh JWT token
+- `POST /auth/verify-email` - Confirm email
+- `POST /auth/forgot-password` - Request password reset
+- `POST /auth/reset-password` - Reset password
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Polls
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- `GET /polls` - Get a list of polls
+- `GET /polls/:id` - Get information about a poll
+- `POST /polls` - Create a new poll
+- `PUT /polls/:id` - Update a poll
+- `DELETE /polls/:id` - Delete a poll
+- `POST /polls/:id/vote` - Vote in a poll
+- `GET /polls/:id/results` - Get poll results
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is educational and is distributed under the [MIT](LICENSE) license.
