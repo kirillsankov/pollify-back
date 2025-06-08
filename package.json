@@ -22,7 +22,6 @@
   "dependencies": {
     "@bull-board/api": "^6.9.2",
     "@bull-board/nestjs": "^6.9.2",
-    "@google/genai": "^0.10.0",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/bullmq": "^11.0.2",
     "@nestjs/common": "^11.0.1",
@@ -41,6 +40,7 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "express-basic-auth": "^1.2.1",
+    "https-proxy-agent": "^7.0.6",
     "install": "^0.13.0",
     "mongoose": "^8.13.2",
     "nodemailer": "^7.0.2",

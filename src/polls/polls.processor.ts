@@ -1,8 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { GeneratePollDto, RequestPollDto } from './dto/create-poll.dto';
-import { GoogleGenAI, Type } from '@google/genai';
 import { connectionRedis, QueueName } from 'src/configs/redis.config';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import * as https from 'https';
 
 @Processor(QueueName.POLL_AI, {
   connection: connectionRedis,
@@ -15,44 +16,55 @@ import { connectionRedis, QueueName } from 'src/configs/redis.config';
 export class AiConsumer extends WorkerHost {
   async process(job: Job<GeneratePollDto>): Promise<RequestPollDto> {
     const { messagePrompt, numberQuestion } = job.data;
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: `Create a poll about "${messagePrompt}" with exactly ${numberQuestion} questions. 
-      Each question should have 3-5 answer options. 
-      Generate a clear, engaging title for the poll and make sure each question is relevant to the topic.
-      The questions should be diverse and cover different aspects of the topic.
-      Each answer option should be concise and distinct from others.`,
-      config: {
+
+    const aiProxyUrl = process.env.AI_PROXY_URL;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    const agent = aiProxyUrl ? new HttpsProxyAgent(aiProxyUrl) : undefined;
+    console.log('Using proxy:', aiProxyUrl || 'none');
+
+    const requestData = JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: `Create a poll about "${messagePrompt}" with exactly ${numberQuestion} questions. 
+            Each question should have 3-5 answer options. 
+            Generate a clear, engaging title for the poll and make sure each question is relevant to the topic.
+            The questions should be diverse and cover different aspects of the topic.
+            Each answer option should be concise and distinct from others.`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: Type.OBJECT,
+          type: 'object',
           properties: {
             title: {
-              type: Type.STRING,
+              type: 'string',
               description: 'Title of the poll',
-              nullable: false,
             },
             questions: {
-              type: Type.ARRAY,
+              type: 'array',
               description: 'List of questions with options',
-              minItems: numberQuestion.toString(),
-              maxItems: numberQuestion.toString(),
+              minItems: numberQuestion,
+              maxItems: numberQuestion,
               items: {
-                type: Type.OBJECT,
+                type: 'object',
                 properties: {
                   text: {
-                    type: Type.STRING,
+                    type: 'string',
                     description: 'The question text',
-                    nullable: false,
                   },
                   options: {
-                    type: Type.ARRAY,
+                    type: 'array',
                     description: 'List of possible answer options',
-                    minItems: '3',
-                    maxItems: '5',
+                    minItems: 3,
+                    maxItems: 5,
                     items: {
-                      type: Type.STRING,
+                      type: 'string',
                     },
                   },
                 },
@@ -65,10 +77,63 @@ export class AiConsumer extends WorkerHost {
       },
     });
 
-    if (!response.text) {
-      throw new Error('No response from AI');
-    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-    return JSON.parse(response.text) as RequestPollDto;
+    return new Promise((resolve, reject) => {
+      const req = https.request(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(requestData),
+          },
+          ...(agent && { agent }),
+        },
+        (res) => {
+          console.log('"response" event!', res.statusCode, res.headers);
+
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+
+          res.on('end', () => {
+            try {
+              if (res.statusCode !== 200) {
+                reject(
+                  new Error(
+                    `AI API error: ${res.statusCode} ${res.statusMessage}`,
+                  ),
+                );
+                return;
+              }
+
+              const responseData = JSON.parse(data);
+
+              if (!responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
+                reject(new Error('No response from AI'));
+                return;
+              }
+
+              const result = JSON.parse(
+                responseData.candidates[0].content.parts[0].text,
+              ) as RequestPollDto;
+              resolve(result);
+            } catch (error) {
+              reject(new Error(error));
+            }
+          });
+        },
+      );
+
+      req.on('error', (error) => {
+        console.error('Request error:', error);
+        reject(error);
+      });
+
+      req.write(requestData);
+      req.end();
+    });
   }
 }

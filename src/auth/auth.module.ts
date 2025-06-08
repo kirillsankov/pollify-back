@@ -33,7 +33,7 @@ import { JwtStrategy } from './jwt.strategy';
         service: 'gmail',
         auth: {
           type: 'OAuth2',
-          user: 'kirillsankov2014@gmail.com',
+          user: 'sankovkirill077@gmail.com',
           clientId: process.env.CLIENT_ID,
           clientSecret: process.env.CLIENT_SECRET,
           refreshToken: process.env.REFRESH_TOKEN,
@@ -43,7 +43,7 @@ import { JwtStrategy } from './jwt.strategy';
         debug: true,
       },
       defaults: {
-        from: '"Pollify App" <kirillsankov2014@gmail.com>',
+        from: '"Pollify App" <sankovkirill077@gmail.com>',
       },
       template: {
         dir: join(__dirname, '../templates'),
