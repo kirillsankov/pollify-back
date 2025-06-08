@@ -158,6 +158,10 @@ This will start MongoDB, Redis, and the application itself in Docker containers.
 - `POST /polls/:id/vote` - Vote in a poll
 - `GET /polls/:id/results` - Get poll results
 
+## Global AI Access
+
+This application includes built-in proxy support for AI requests to Google Gemini API. All AI-related functionality works seamlessly from any location worldwide, bypassing geographical restrictions and ensuring consistent performance for poll generation features.
+
 ## License
 
 This project is educational and is distributed under the [MIT](LICENSE) license.
