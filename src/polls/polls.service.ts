@@ -25,6 +25,15 @@ export class PollsService {
   async createPoll(user: User, createPollDto: RequestPollDto): Promise<Poll> {
     const { title, questions } = createPollDto;
 
+    questions.forEach((question, questionIndex) => {
+      const uniqueOptions = new Set(question.options);
+      if (uniqueOptions.size !== question.options.length) {
+        throw new BadRequestException(
+          `Question ${questionIndex + 1} contains duplicate options. All options must be unique.`,
+        );
+      }
+    });
+
     const formattedQuestions = questions.map((q) => ({
       text: q.text,
       options: q.options,
@@ -60,6 +69,15 @@ export class PollsService {
     if (poll.authorId !== (user._id as string).toString()) {
       throw new ForbiddenException('You are not the admin of this poll');
     }
+
+    updatePollDto.questions.forEach((question, questionIndex) => {
+      const uniqueOptions = new Set(question.options);
+      if (uniqueOptions.size !== question.options.length) {
+        throw new BadRequestException(
+          `Question ${questionIndex + 1} contains duplicate options. All options must be unique.`,
+        );
+      }
+    });
 
     poll.title = updatePollDto.title;
 
