@@ -32,18 +32,19 @@ import { JwtStrategy } from './jwt.strategy';
       transport: {
         service: 'gmail',
         auth: {
-          type: 'OAuth2',
-          user: 'sankovkirill077@gmail.com',
-          clientId: process.env.CLIENT_ID,
-          clientSecret: process.env.CLIENT_SECRET,
-          refreshToken: process.env.REFRESH_TOKEN,
+          // type: 'OAuth2',
+          user: process.env.GOOGLE_APP_USER,
+          // clientId: process.env.CLIENT_ID,
+          // clientSecret: process.env.CLIENT_SECRET,
+          // refreshToken: process.env.REFRESH_TOKEN,
           // accessToken: process.env.ACCESS_TOKEN,
           // expires: 3599,
+          pass: process.env.GOOGLE_APP_PASSWORD,
         },
         debug: true,
       },
       defaults: {
-        from: '"Pollify App" <sankovkirill077@gmail.com>',
+        from: `"Pollify App" <${process.env.GOOGLE_APP_USER}>`,
       },
       template: {
         dir: join(__dirname, '../templates'),
