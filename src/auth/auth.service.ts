@@ -49,7 +49,12 @@ export class AuthService {
 
     const findUser = await this.userModel.findOne({ email }).exec();
     if (findUser) {
-      throw new UnauthorizedException('Email already exists');
+      if (!findUser.isEmailVerified) {
+        throw new UnauthorizedException(
+          'This email is already registered but not verified. Please try to log in with your credentials to verify your account. If you have not registered on this site, please try again in 30 minutes.',
+        );
+      }
+      throw new UnauthorizedException('Email already exists.');
     }
 
     const user = new this.userModel({
