@@ -1,11 +1,16 @@
 <p align="center">
   <h1 align="center">Pollify</h1>
-  <p align="center">Educational project for creating and managing polls</p>
+  <p align="center">Modern web application for creating and managing polls with AI-powered features</p>
+  <p align="center">
+    <a href="https://polls-ai.ru/" target="_blank">🌐 Live Demo</a>
+  </p>
 </p>
 
 ## Project Description
 
-Pollify is an educational web application for creating and conducting polls. The project is developed using a modern technology stack and follows best development practices. Users can register, create polls, vote, and view results.
+Pollify is a modern web application for creating and conducting polls with AI-powered features. The project is developed using a cutting-edge technology stack and follows best development practices. Users can register, create polls with AI assistance, vote, and view detailed analytics with real-time insights.
+
+**🚀 Live Application**: [https://polls-ai.ru/](https://polls-ai.ru/)
 
 ## Technology Stack
 
@@ -51,30 +56,55 @@ Pollify is an educational web application for creating and conducting polls. The
 
 - **class-transformer** - a library for transforming plain objects into class instances and vice versa.
 
+### Development and Deployment
+
+- **Docker** - containerization platform for consistent deployment across environments.
+
+- **ESLint** - static code analysis tool for identifying and fixing code quality issues.
+
+- **Prettier** - code formatter for maintaining consistent code style across the project.
+
 ## Project Structure
 
 ```
 src/
+├── app.controller.spec.ts # Unit tests for the main application controller
+├── app.controller.ts      # Main application controller with basic endpoints
+├── app.module.ts          # Root module that imports and configures all other modules
+├── app.service.ts         # Main application service with core business logic
 ├── auth/                  # Authentication and authorization module
 │   ├── dto/               # Data Transfer Objects for authentication
 │   ├── entities/          # User and token entities
 │   ├── guards/            # Guards for route protection
 │   └── interfaces/        # Interfaces for typing
+├── decorators/            # Custom decorators for enhanced functionality
 ├── polls/                 # Polls module
 │   ├── dto/               # DTOs for creating polls and voting
 │   └── entities/          # Poll entities
 ├── templates/             # HTML templates for emails
-├── config/                # Configuration files
+├── configs/               # Configuration files
 └── main.ts               # Application entry point
 ```
 
 ## Functionality
 
+### Core Features
 - **User Authentication**: registration, login, email confirmation, password recovery
-- **Poll Management**: creating, editing, deleting polls
-- **Voting**: ability to vote in polls
-- **Analytics**: viewing poll results with analytical data
-- **Notifications**: sending email notifications about important events
+- **Poll Management**: creating, editing, deleting polls with intuitive interface
+- **Voting System**: secure and anonymous voting with real-time updates
+- **Advanced Analytics**: interactive charts, real-time results, and data export
+- **Email Notifications**: automated notifications for important events
+
+### AI-Powered Features
+- **Smart Poll Generation**: AI-assisted poll creation with intelligent question suggestions
+- **Result Analysis**: AI-powered insights and trend analysis
+- **Question Optimization**: AI recommendations for better poll engagement
+- **Audience Insights**: AI-driven audience behavior analysis
+
+### Real-Time Features
+- **Live Results**: watch poll results update in real-time
+- **Interactive Charts**: beautiful, responsive data visualizations
+- **Instant Notifications**: real-time updates for poll creators and participants
 
 ## Installation and Running
 
@@ -82,7 +112,7 @@ src/
 
 - Node.js (v18 or higher)
 - MongoDB
-- Redis
+- Redis (Bull MQ)
 
 ### Installing Dependencies
 
@@ -90,28 +120,6 @@ src/
 $ npm install
 ```
 
-### Environment Setup
-
-Create a `.env` file in the project root with the following variables:
-
-```
-APP_PORT=
-MONGO_PORT=
-MONGO_INITDB_ROOT_USERNAME=
-MONGO_INITDB_ROOT_PASSWORD=
-MONGO_USER=
-MONGO_PASSWORD=
-MONGO_DB=
-USER_NAME=
-USER_PASSWORD=
-FRONTEND_URL=
-GEMINI_API_KEY=
-JWT_SECRET=
-CLIENT_ID=
-CLIENT_SECRET=
-REFRESH_TOKEN=
-ACCESS_TOKEN=
-```
 
 ### Running the Application
 
@@ -142,26 +150,27 @@ This will start MongoDB, Redis, and the application itself in Docker containers.
 ### Authentication
 
 - `POST /auth/register` - Register a new user
+- `POST /auth/verify-email` - Confirm email address with verification code
+- `POST /auth/resend-verification-email` - Resend email verification code
 - `POST /auth/login` - Log in to the system
-- `POST /auth/refresh` - Refresh JWT token
-- `POST /auth/verify-email` - Confirm email
+- `POST /auth/refresh` - Refresh JWT token using refresh token
 - `POST /auth/forgot-password` - Request password reset
-- `POST /auth/reset-password` - Reset password
+- `POST /auth/reset-password` - Reset password with verification code
+- `POST /auth/logout` - Log out and clear refresh token
+- `GET /auth/validate` - Validate current JWT token (requires authentication)
 
 ### Polls
 
-- `GET /polls` - Get a list of polls
-- `GET /polls/:id` - Get information about a poll
+- `GET /polls` - Get all polls for the authenticated user
+- `GET /polls/:id` - Get detailed information about a specific poll
+- `GET /polls/short/:id` - Get short information about a specific poll
 - `POST /polls` - Create a new poll
-- `PUT /polls/:id` - Update a poll
+- `POST /polls/generate` - Generate a poll using AI
+- `PUT /polls/:id/update` - Update an existing poll
 - `DELETE /polls/:id` - Delete a poll
-- `POST /polls/:id/vote` - Vote in a poll
-- `GET /polls/:id/results` - Get poll results
+- `POST /polls/:id/vote` - Submit a vote for a poll
+- `GET /polls/:id/check-vote` - Check if user has voted for a specific poll
 
 ## Global AI Access
 
 This application includes built-in proxy support for AI requests to Google Gemini API. All AI-related functionality works seamlessly from any location worldwide, bypassing geographical restrictions and ensuring consistent performance for poll generation features.
-
-## License
-
-This project is educational and is distributed under the [MIT](LICENSE) license.
